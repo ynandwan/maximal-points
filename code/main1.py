@@ -2,22 +2,21 @@ import os
 import utils 
 import argparse 
 import point, sort
-import staircase 
+
+import staircase1 
 from IPython.core.debugger import Pdb
 
 def main(input_file,output_file):
     l = utils.read_input(input_file)
     sort.quicksort(l,key=lambda p: p.x)
     maximal_points = []
-    sc = staircase.Staircase2D()
+    sc = staircase1.Staircase2D()
     
     #Pdb().set_trace()
     for i in range(len(l)-1,-1,-1):
         p = l[i]
         #if p.ind == 951:
-        #    #Pdb().set_trace()
-        #    pass
-
+        #    Pdb().set_trace()
         is_maximal = sc.update(point.Point2D(p.ind,p.y,p.z))
         #print(p)
         #print(sc.maximal_points.inorder_traverse())

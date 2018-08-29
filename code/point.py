@@ -19,7 +19,7 @@ class Point2D(object):
         self.ind = ind
 
     def dominates(self,p):
-        return (self.x > p.x and self.y > p.y)
+        return (self.x >= p.x and self.y >= p.y)
 
     def __str__(self):
         return('{},{},{}'.format(self.ind,self.x, self.y))

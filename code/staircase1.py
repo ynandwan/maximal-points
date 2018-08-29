@@ -1,8 +1,8 @@
 import os,random,math
-import avl
+import avl_tpt as avl
 class Staircase2D(object):
     def __init__(self):
-        self.maximal_points = avl.AVLTree()
+        self.maximal_points = avl.avltree()
         self.size = 0
 
     def update(self, p):
@@ -24,7 +24,7 @@ class Staircase2D(object):
                 return True
         """
         #
-        prex,sucx =  avl.findPreSuc(self.maximal_points.root,p.x, lambda node: node.key)
+        prex,sucx =  avl.findPreSuc(self.maximal_points,p.x, lambda node: node.key)
         #if sucx is None:
         #    #highest x coordinate
         #    self.maximal_points.insert(p.x,p)
@@ -40,7 +40,7 @@ class Staircase2D(object):
             self.size += 1
             return True
         #
-        prey,sucy = avl.findPreSuc(self.maximal_points.root, -1*p.y, lambda node: -1*node.val.y)
+        prey,sucy = avl.findPreSuc(self.maximal_points, -1*p.y, lambda node: -1*node.val.y)
         if sucy is None:
             self.maximal_points.insert(p.x,p)
             self.size += 1
@@ -49,7 +49,7 @@ class Staircase2D(object):
 
         #have to delete all points between sucy and prex(inclusive)
         #find all points between sucy and prex and delete them(inclusive)
-        keys_to_delete = avl.rangeSearch(self.maximal_points.root,sucy.key, prex.key)
+        keys_to_delete = avl.rangeSearch(self.maximal_points,sucy.key, prex.key)
         for key in keys_to_delete:
             self.maximal_points.delete(key)
             self.size -= 1

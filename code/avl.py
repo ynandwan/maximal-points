@@ -1,313 +1,362 @@
+#findPreSuc from - https://www.geeksforgeeks.org/inorder-predecessor-successor-given-key-bst/
+#from IPython.core.debugger import Pdb
 
-# source -  http://pythonfiddle.com/avl-tree/
-# -*- coding: utf-8 -*-
-##  Implementation of AVL tree
-#
-#   Author: Tim Rijavec
-#           tim@coder.si
-#           http://coder.si
+
+class Node:
+    def __init__(self,k,v,lc = None, rc = None, parent = None):
+        self.key = k
+        self.val = v
+        self.left = lc 
+        self.right = rc 
+        self.parent = parent 
+        self.update_hb()
+    
+    def update_hb(self):
+        lh,rh = 0,0
+        if self.left:
+            lh = self.left.height
+        if self.right:
+            rh = self.right.height
+
+        self.height = 1 + max(lh,rh)
+        self.balance = lh - rh 
+
+    def is_imbalance(self):
+        return (abs(self.balance) > 1)
+
+    def is_leaf(self):
+        return ((self.left is None) and (self.right is None))
+
+    def is_left(self):
+        return (self.parent and (self == self.parent.left))
+
+    def is_right(self):
+        return (self.parent and (self == self.parent.right))
+
+    def search(self,k):
+        if self.key == k:
+            return self
+        elif k < self.key and self.left:
+            return self.left.search(k)
+        elif k > self.key and self.right:
+            return self.right.search(k)
+        else:
+            return None
+
+
+    def find_successor(self):
+        right = self.right
+        left = right.left
+        if left is None:
+            return right
+
+        while left.left:
+            left = left.left
+        #
+        return left
+
+        
+    def inorder_traverse(self):
+        result = []
+        if self.left:
+            result.extend(self.left.inorder_traverse())
+
+        result.append(self.val)
+        if self.right:
+            result.extend(self.right.inorder_traverse())
+
+        return result
+
+    def display(self,level=0):
+        if self.right:
+            self.right.display(level + 1)
+            print (('\t' * level), ('    /'))
  
-class avlnode(object):
-    """
-    A node in an avl tree.
-    """
+        print (('\t' * level), self)
  
-    def __init__(self, key,val):
-        "Construct."
- 
-        # The node's key
-        self.key = key
-        # The node's left child
-        self.left = None
-        # The node's right child
-        self.right = None
-        self.val = val 
- 
+        if self.left:
+            print( ('\t' * level), ('    \\'))
+            self.left.display( level + 1)
+
+
     def __str__(self):
         "String representation."
-        return str(self.key)
+        return '{}:{}:{}'.format(self.key,self.height,self.balance)
  
     def __repr__(self):
         "String representation."
-        return str(self.key)
-    
-class avltree(object):    
-    """
-    An avl tree.
-    """
-    
-    def __init__(self):
-        "Construct."
- 
-        # Root node of the tree.
-        self.node = None
-        # Height of the tree.
-        self.height = -1
-        # Balance factor of the tree.
-        self.balance = 0
-        
-    def insert(self, key,val):
-        """
-        Insert new key into node
-        """
-        # Create new node
-        # Initial tree
-        if not self.node:
-            self.node = avlnode(key,val)
-            self.node.left = avltree()
-            self.node.right = avltree()
-        # Insert key to the left subtree
-        elif key < self.node.key:
-            self.node.left.insert(key,val)
-        # Insert key to the right subtree
-        elif key > self.node.key:
-            self.node.right.insert(key,val)
-            
-        # Rebalance tree if needed
-        self.rebalance()
-        
-    def rebalance(self):
-        """
-        Rebalance tree. After inserting or deleting a node, 
-        it is necessary to check each of the node's ancestors for consistency with the rules of AVL
-        """
- 
-        # Check if we need to rebalance the tree
-        #   update height
-        #   balance tree
-        self.update_heights(recursive=False)
-        self.update_balances(False)
- 
-        # For each node checked, 
-        #   if the balance factor remains −1, 0, or +1 then no rotations are necessary.
-        while self.balance < -1 or self.balance > 1: 
-            # Left subtree is larger than right subtree
-            if self.balance > 1:
- 
-                # Left Right Case -> rotate y,z to the left
-                if self.node.left.balance < 0:
-                    #     x               x
-                    #    / \             / \
-                    #   y   D           z   D
-                    #  / \        ->   / \
-                    # A   z           y   C
-                    #    / \         / \
-                    #   B   C       A   B
-                    self.node.left.rotate_left()
-                    self.update_heights()
-                    self.update_balances()
- 
-                # Left Left Case -> rotate z,x to the right
-                #       x                 z
-                #      / \              /   \
-                #     z   D            y     x
-                #    / \         ->   / \   / \
-                #   y   C            A   B C   D 
-                #  / \ 
-                # A   B
-                self.rotate_right()
-                self.update_heights()
-                self.update_balances()
-            
-            # Right subtree is larger than left subtree
-            if self.balance < -1:
-                
-                # Right Left Case -> rotate x,z to the right
-                if self.node.right.balance > 0:
-                    #     y               y
-                    #    / \             / \
-                    #   A   x           A   z
-                    #      / \    ->       / \
-                    #     z   D           B   x
-                    #    / \                 / \
-                    #   B   C               C   D
-                    self.node.right.rotate_right() # we're in case III
-                    self.update_heights()
-                    self.update_balances()
- 
-                # Right Right Case -> rotate y,x to the left
-                #       y                 z
-                #      / \              /   \
-                #     A   z            y     x
-                #        / \     ->   / \   / \
-                #       B   x        A   B C   D 
-                #          / \ 
-                #         C   D
-                self.rotate_left()
-                self.update_heights()
-                self.update_balances()
- 
-    def update_heights(self, recursive=True):
-        """
-        Update tree height
- 
-        Tree height is max height of either left or right subtrees +1 for root of the tree
-        """
-        if self.node: 
-            if recursive: 
-                if self.node.left: 
-                    self.node.left.update_heights()
-                if self.node.right:
-                    self.node.right.update_heights()
-            
-            self.height = 1 + max(self.node.left.height, self.node.right.height)
-        else: 
-            self.height = -1
- 
-    def update_balances(self, recursive=True):
-        """
-        Calculate tree balance factor
- 
-        The balance factor is calculated as follows: 
-            balance = height(left subtree) - height(right subtree). 
-        """
-        if self.node:
-            if recursive:
-                if self.node.left:
-                    self.node.left.update_balances()
-                if self.node.right:
-                    self.node.right.update_balances()
- 
-            self.balance = self.node.left.height - self.node.right.height
-        else:
-            self.balance = 0 
- 
-            
-    def rotate_right(self):
-        """
-        Right rotation
-            set self as the right subtree of left subree
-        """
-        new_root = self.node.left.node
-        new_left_sub = new_root.right.node
-        old_root = self.node
- 
-        self.node = new_root
-        old_root.left.node = new_left_sub
-        new_root.right.node = old_root
- 
-    def rotate_left(self):
-        """
-        Left rotation
-            set self as the left subtree of right subree
-        """
-        new_root = self.node.right.node
-        new_left_sub = new_root.left.node
-        old_root = self.node
- 
-        self.node = new_root
-        old_root.right.node = new_left_sub
-        new_root.left.node = old_root
- 
-    def delete(self, key):
-        """
-        Delete key from the tree
- 
-        Let node X be the node with the value we need to delete, 
-        and let node Y be a node in the tree we need to find to take node X's place, 
-        and let node Z be the actual node we take out of the tree.
- 
-        Steps to consider when deleting a node in an AVL tree are the following:
- 
-            * If node X is a leaf or has only one child, skip to step 5. (node Z will be node X)
-            * Otherwise, determine node Y by finding the largest node in node X's left sub tree 
-                (in-order predecessor) or the smallest in its right sub tree (in-order successor).
-            * Replace node X with node Y (remember, tree structure doesn't change here, only the values). 
-            * In this step, node X is essentially deleted when its internal values were overwritten with node Y's.
-            * Choose node Z to be the old node Y.
-            * Attach node Z's subtree to its parent (if it has a subtree). If node Z's parent is null, 
-                update root. (node Z is currently root)
-            * Delete node Z.
-            * Retrace the path back up the tree (starting with node Z's parent) to the root, 
-                adjusting the balance factors as needed.
-        """
-        if self.node != None:
-            if self.node.key == key:
-                # Key found in leaf node, just erase it
-                if not self.node.left.node and not self.node.right.node:
-                    self.node = None
-                # Node has only one subtree (right), replace root with that one
-                elif not self.node.left.node:                
-                    self.node = self.node.right.node
-                # Node has only one subtree (left), replace root with that one
-                elif not self.node.right.node:
-                    self.node = self.node.left.node
-                else:
-                    # Find  successor as smallest node in right subtree or
-                    #       predecessor as largest node in left subtree
-                    successor = self.node.right.node  
-                    while successor and successor.left.node:
-                        successor = successor.left.node
- 
-                    if successor:
-                        self.node.key = successor.key
-                        self.node.val = successor.val
- 
-                        # Delete successor from the replaced node right subree
-                        self.node.right.delete(successor.key)
- 
-            elif key < self.node.key:
-                self.node.left.delete(key)
- 
-            elif key > self.node.key:
-                self.node.right.delete(key)
- 
-            # Rebalance tree
-            self.rebalance()
- 
-    def inorder_traverse(self):
-        """
-        Inorder traversal of the tree
-            Left subree + root + Right subtree
-        """
-        result = []
- 
-        if not self.node:
-            return result
-        
-        result.extend(self.node.left.inorder_traverse())
-        result.append(self.node.val)
-        result.extend(self.node.right.inorder_traverse())
- 
-        return result
- 
-    def display(self, node=None, level=0):
-        if not node:
-            node = self.node
- 
-        if node.right.node:
-            self.display(node.right.node, level + 1)
-            print (('\t' * level), ('    /'))
- 
-        print (('\t' * level), node)
- 
-        if node.left.node:
-            print( ('\t' * level), ('    \\'))
-            self.display(node.left.node, level + 1)
+        return str(self)
 
+
+
+#debug = False 
+
+
+class AVLTree:
+    def __init__(self):
+        self.root = None
+
+    def insert_at(self,at_node,key,val,is_left = True, parent = None):
+        if at_node is None:
+            at_node =  Node(key,val,parent=parent)
+            if is_left:
+                parent.left = at_node
+            else:
+                parent.right = at_node
+            #
+            #if debug:
+            #    print('inserted at leaf, start rebalance')
+            self.rebalance(at_node)
+            return 
+        #
+        if key < at_node.key:
+            self.insert_at(at_node.left,key,val,True,at_node)
+        elif key > at_node.key:
+            self.insert_at(at_node.right, key, val, False, at_node)
+            
+
+
+    def rebalance(self,at_node):
+        #if debug:
+        #    print('reb',at_node)
+        #this recursion starts from a leaf
+        #we update the balance of the parent of at_node assuming at_node is balanced and updated
+        #while inserting we stop as soon as we rotate once
+        parent = at_node.parent
+        #Pdb().set_trace()
+        if parent is None:
+            self.root = at_node 
+            #if debug: 
+            #    print('reb ret from root')
+            return
+
+        prev_ht = parent.height
+        parent.update_hb()
+        if parent.is_imbalance():
+            parent = self.rotate(parent)
+            if parent.parent is None:
+                #if debug:
+                #    print('reb, set root',at_node)
+                self.root = parent
+            
+            new_ht = parent.height
+            if prev_ht == new_ht:
+                #if debug:
+                #    print(' stop reb',at_node)
+                return
+            else:
+                #print('continue even after one rotation',at_node,parent)
+                self.rebalance(parent)
+                #if debug:
+                #    print('return reb after rot',at_node)
+        else:
+            self.rebalance(parent)
+            #if debug:
+            #    print('return reb',at_node)
+
+
+    def rotate_left(self,z):
+        y = z.right
+        x = y.right
+        T2 = y.left
+        parent = z.parent
+        is_left = z.is_left()
+        is_right = z.is_right()
+
+        z.right = T2
+        if T2:
+            T2.parent = z
+        
+        y.left = z
+        z.parent = y
+
+        y.parent = parent
+
+        if is_left:
+            parent.left = y
+        elif is_right:
+            parent.right = y
+
+        
+        z.update_hb()
+        y.update_hb()
+        return y
+
+    def rotate_right(self, z):
+        y = z.left
+        x = y.left
+        T3 = y.right
+        parent  = z.parent
+        is_left = z.is_left()
+        is_right = z.is_right()
+
+        z.left = T3
+        if T3:
+            T3.parent = z
+
+        y.right = z
+        z.parent = y
+
+        y.parent = parent
+
+        if is_left:
+            parent.left = y
+        elif is_right:
+            parent.right = y
+
+        z.update_hb()
+        y.update_hb()
+        return y
+
+
+
+    def rotate(self,z):
+        if z.balance > 0:
+            y = z.left
+        else:
+            y = z.right
+
+        if y.balance > 0:
+            x = y.left
+        else:
+            x = y.right
+
+        #do rotations with z, y and x
+
+        if y.is_left():
+            if x.is_left():
+                return self.rotate_right(z)
+            else:
+                self.rotate_left(y)
+                return self.rotate_right(z)
+        else:
+            if x.is_right():
+                return self.rotate_left(z)
+            else:
+                self.rotate_right(y)
+                return self.rotate_left(z)
+
+
+
+    def insert(self,key, val):
+        if self.root is None:
+            self.root = Node(key,val)
+            return 
+        #
+        self.insert_at(self.root, key, val)
+
+
+    def delete(self,key):
+        #Pdb().set_trace()
+        if self.root is None:
+            raise KeyError
+        elif self.root.left is None and self.root.right is None:
+            if self.root.key == key:
+                del self.root
+                self.root = None
+                return 
+            else:
+                raise KeyError
+
+        #root exists and has at least 1 child
+        found_at = self.root.search(key)
+        if found_at is None:
+            raise KeyError
+
+        #3 cases - 
+        #case 1 - its a leaf
+        #case 2 - has 1 child
+        #case 3 - has 2 children
+
+        #reduce case 3 to case 2 or case 1
+        if found_at.left and found_at.right:
+            #case 3 - two children
+            suc = found_at.find_successor()
+            found_at.key = suc.key
+            found_at.val = suc.val
+            found_at = suc
+            #delete found_at which now has only 1 or 0 child
+
+        #
+        #in avl tree if a node has only one child then its ht is always 2
+        child = None 
+        if found_at.left:
+            child = found_at.left
+        elif found_at.right:
+            child = found_at.right
+
+        rebalance_at = None 
+        if child:
+            found_at.key = child.key 
+            found_at.val = child.val
+            found_at.left = None
+            found_at.right = None
+            del child
+            rebalance_at = found_at
+
+        else:
+            #if found_at is a leaf node
+            rebalance_at = found_at.parent
+            if rebalance_at is None:
+                #this has been handled above as well. shouldn't happen.
+                return 
+            is_left = found_at.is_left()
+            is_right = found_at.is_right()
+            if is_left:
+                rebalance_at.left = None
+            elif is_right:
+                rebalance_at.right = None
+            #
+            del found_at
+        #
+        prev_ht = rebalance_at.height
+        rebalance_at.update_hb()
+        new_ht = rebalance_at.height
+        if rebalance_at.is_imbalance():
+            rebalance_at  = self.rotate(rebalance_at)
+            if rebalance_at.parent is None:
+                self.root = rebalance_at
+            new_ht == rebalance_at.height 
+
+        if prev_ht == new_ht:
+            return
+        else:
+            self.rebalance(rebalance_at)
+
+    def inorder_traverse(self):
+        if self.root is None:
+            return []
+
+        return self.root.inorder_traverse()
+
+    def display(self):
+        if self.root is None:
+            return
+        
+        self.root.display()
 
 
 def rangeSearch(root, key1, key2):
-    if root.node is None:
-        return [] 
+    if root is None:
+        return []
     #
     keys_in_left = []
     keys_in_right = []
-    if key1 < root.node.key:
-        keys_in_left = rangeSearch(root.node.left,key1,key2)
-    if key2 > root.node.key:
-        keys_in_right = rangeSearch(root.node.right,key1, key2)
+    if key1 < root.key:
+        keys_in_left = rangeSearch(root.left,key1,key2)
+    if key2 > root.key:
+        keys_in_right = rangeSearch(root.right,key1, key2)
     #
-    rv = None 
+    rv = None
     if len(keys_in_left) > len(keys_in_right):
         keys_in_left.extend(keys_in_right)
-        rv = keys_in_left 
+        rv = keys_in_left
     else:
         keys_in_right.extend(keys_in_left)
-        rv = keys_in_right 
+        rv = keys_in_right
 
-    if key1 <= root.node.key and key2 >= root.node.key:
-        rv.append(root.node.key)
+    if key1 <= root.key and key2 >= root.key:
+        rv.append(root.key)
     #
     return rv
 
@@ -319,40 +368,41 @@ def findPreSuc(root, key , extractor):
     _findPreSuc(root,key,extractor)
     p,s = _findPreSuc.pre, _findPreSuc.suc
     resetPreSuc()
-    return p,s
+    return p,s 
+
 
 def _findPreSuc(root, key, extractor):
     # Base Case
-    if root.node is None:
+    if root is None:
         return
  
     # If key is present at root
-    if extractor(root.node) == key: 
+    if extractor(root) == key: 
         # the maximum value in left subtree is predecessor
-        if root.node.left.node is not None:
-            tmp = root.node.left #tmp is avltree
-            while(tmp.node.right.node):
-                tmp = tmp.node.right 
-            _findPreSuc.pre = tmp.node #an avl node
- 
- 
+        if root.left is not None:
+            tmp = root.left #tmp is a TreeNode
+            while(tmp.right):
+                tmp = tmp.right
+            _findPreSuc.pre = tmp #an avl node
+
+
         # the minimum value in right subtree is successor
-        if root.node.right.node is not None:
-            tmp = root.node.right
-            while(tmp.node.left.node):
-                tmp = tmp.node.left 
-            _findPreSuc.suc = tmp.node # an avl node
- 
+        if root.right is not None:
+            tmp = root.right
+            while(tmp.left):
+                tmp = tmp.left
+            _findPreSuc.suc = tmp # an avl node
+
         return
- 
+
     # If key is smaller than root's key, go to left subtree
-    if extractor(root.node) > key :
-        _findPreSuc.suc = root.node 
-        _findPreSuc(root.node.left, key, extractor)
- 
+    if extractor(root) > key :
+        _findPreSuc.suc = root 
+        _findPreSuc(root.left, key, extractor)
+
     else: # go to right subtree
-        _findPreSuc.pre = root.node
-        _findPreSuc(root.node.right, key, extractor)
+        _findPreSuc.pre = root 
+        _findPreSuc(root.right, key, extractor)
 
 
 def resetPreSuc():
@@ -361,17 +411,34 @@ def resetPreSuc():
 
 
 
-# Demo    
-if __name__ == "__main__": 
-    tree = avltree()
+
+if __name__ == "__main__":
+    tree = AVLTree()
     data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
- 
+
     from random import randrange
-    for key in data:  
-        tree.insert(key)
- 
+    for key in data:
+        tree.insert(key,-key)
+
     for key in [4,3]:
         tree.delete(key)
-        
+
     print (tree.inorder_traverse())
     tree.display()
+ 
+
+if False:
+    import numpy as np
+    np.random.seed(1)
+    data = list(set(np.random.randint(100000, size = 10000)))
+    from avl1 import *
+    tree = AVLTree()
+    for key in data:
+        tree.insert(key,key)
+
+    #
+    np.random.seed(130)
+    delete_ind = list(set(np.random.randint(len(data),size = 500)))
+    for i in delete_ind:
+        tree.delete(data[i])
+

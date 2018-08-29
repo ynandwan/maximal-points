@@ -6,30 +6,12 @@ class Staircase2D(object):
         self.size = 0
 
     def update(self, p):
-        #print(self.maximal_points.inorder_traverse())
-        #if self.size > 0:
-        #    self.maximal_points.display()
-        #
         if self.size == 0:
             self.maximal_points.insert(p.x,p)
             self.size += 1
             return True
-        """
-        if self.size == 1:
-            if self.maximal_points.node.val.dominates(p):
-                return False
-            else:
-                self.maximal_points.insert(p.x,p)
-                self.size += 1
-                return True
-        """
         #
         prex,sucx =  avl.findPreSuc(self.maximal_points.root,p.x, lambda node: node.key)
-        #if sucx is None:
-        #    #highest x coordinate
-        #    self.maximal_points.insert(p.x,p)
-        #    self.size += 1
-        #    return True
 
         if sucx is not None and sucx.val.dominates(p):
             return False

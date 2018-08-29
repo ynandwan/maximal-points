@@ -379,7 +379,12 @@ def _findPreSuc(root, key, extractor):
     if root is None:
         return
     # If key is smaller than root's key, go to left subtree
-    if extractor(root) > key :
+    if extractor(root) == key:
+        #set both pre and suc as current node
+        _findPreSuc.suc  = root
+        _findPreSuc.pre = root
+
+    elif extractor(root) > key :
         _findPreSuc.suc = root 
         _findPreSuc(root.left, key, extractor)
 

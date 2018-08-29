@@ -1,9 +1,14 @@
 import os
 import point
+import fileinput
 
 def read_input(file_name):
-    fh = open(file_name)
-    lines = fh.readlines()
+    #fh = open(file_name)
+    #lines = fh.readlines()
+    lines = []
+    for lin in fileinput.input(file_name):
+        lines.append(lin)
+    #
     np = int(lines[0].strip())
     points = []
     for i in range(np):

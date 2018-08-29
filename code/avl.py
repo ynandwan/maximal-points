@@ -45,6 +45,7 @@ class Node:
 
 
     def find_successor(self):
+        #assumes that self has a right child
         right = self.right
         left = right.left
         if left is None:
@@ -54,6 +55,7 @@ class Node:
             left = left.left
         #
         return left
+
 
         
     def inorder_traverse(self):
@@ -371,30 +373,11 @@ def findPreSuc(root, key , extractor):
     return p,s 
 
 
+
 def _findPreSuc(root, key, extractor):
     # Base Case
     if root is None:
         return
- 
-    # If key is present at root
-    if extractor(root) == key: 
-        # the maximum value in left subtree is predecessor
-        if root.left is not None:
-            tmp = root.left #tmp is a TreeNode
-            while(tmp.right):
-                tmp = tmp.right
-            _findPreSuc.pre = tmp #an avl node
-
-
-        # the minimum value in right subtree is successor
-        if root.right is not None:
-            tmp = root.right
-            while(tmp.left):
-                tmp = tmp.left
-            _findPreSuc.suc = tmp # an avl node
-
-        return
-
     # If key is smaller than root's key, go to left subtree
     if extractor(root) > key :
         _findPreSuc.suc = root 

@@ -1,4 +1,4 @@
-#findPreSuc from - https://www.geeksforgeeks.org/inorder-predecessor-successor-given-key-bst/
+#references - https://www.geeksforgeeks.org/inorder-predecessor-successor-given-key-bst/
 #from IPython.core.debugger import Pdb
 
 
@@ -88,6 +88,21 @@ class Node:
     def __repr__(self):
         "String representation."
         return str(self)
+
+
+    def debug_traverse(self):
+        rv = [self.key]
+        lt = []
+        rt = []
+        if self.left:
+            lt = self.left.debug_traverse()
+        #
+        if self.right:
+            rt = self.right.debug_traverse()
+        
+        rv.extend(lt)
+        rv.extend(rt)
+        return rv
 
 
 
@@ -220,8 +235,12 @@ class AVLTree:
 
         if y.balance > 0:
             x = y.left
-        else:
+        elif y.balance < 0:
             x = y.right
+        elif y.is_right():
+            x = y.right
+        else:
+            x = y.left
 
         #do rotations with z, y and x
 
@@ -318,7 +337,8 @@ class AVLTree:
             rebalance_at  = self.rotate(rebalance_at)
             if rebalance_at.parent is None:
                 self.root = rebalance_at
-            new_ht == rebalance_at.height 
+            #
+            new_ht = rebalance_at.height 
 
         if prev_ht == new_ht:
             return
@@ -414,19 +434,68 @@ if __name__ == "__main__":
     print (tree.inorder_traverse())
     tree.display()
  
-
+def check(tree, t2):
+    l1 = []
+    if tree.root is not None:
+        l1 = tree.root.debug_traverse()
+    #
+    l2 = t2.debug_traverse()
+    rv = True 
+    for i in range(min(len(l1),len(l2))):
+        if l1[i] != l2[i]:
+            rv = False
+            break
+    if rv:
+        rv = len(l1) == len(l2)
+    #
+    if not rv:
+        print('mismatch')
+    return rv,i,l1,l2 
+ 
 if False:
     import numpy as np
+    import avl_tpt
+    import avl 
     np.random.seed(1)
-    data = list(set(np.random.randint(100000, size = 10000)))
-    from avl1 import *
-    tree = AVLTree()
+    N = 100000
+    data = list(set(np.random.randint(100000, size = N)))
+    np.random.shuffle(data)
+    leave_ind = set(np.random.randint(len(data),size = 5))
+    all_ind = list(range(len(data)))
+    np.random.shuffle(all_ind)
+    
+    
+    tree = avl.AVLTree()
+    tree_clone = avl.AVLTree()
+    t2 = avl_tpt.avltree()
+    t2clone = avl_tpt.avltree()
     for key in data:
         tree.insert(key,key)
+        t2.insert(key,key)
+        #tree_clone.insert(key,key)
+        #t2clone.insert(key,key)
 
-    #
-    np.random.seed(130)
-    delete_ind = list(set(np.random.randint(len(data),size = 500)))
-    for i in delete_ind:
+    o = check(tree,t2)
+    if not o[0]:
+        print('issue')
+
+
+    for it,i in enumerate(all_ind):
+        #if i not in leave_ind:
+        #print(it,i)
         tree.delete(data[i])
+        t2.delete(data[i])
+        if it % 1000 == 0:
+            o = check(tree,t2)
+        
+            if not o[0]:
+                print('!!!!!!!!!!!!!!!!!!!')
+                break
+            
+        #
+        #tree_clone.delete(data[i])
+        #t2clone.delete(data[i])
+
+
+
 

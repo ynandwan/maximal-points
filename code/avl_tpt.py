@@ -285,7 +285,16 @@ class avltree(object):
             print( ('\t' * level), ('    \\'))
             self.display(node.left.node, level + 1)
 
-
+    def debug_traverse(self):
+        rv = []
+        if self.node:
+            rv = [self.node.key]
+            lt = self.node.left.debug_traverse()
+            rt = self.node.right.debug_traverse()
+            rv.extend(lt)
+            rv.extend(rt)
+        #
+        return rv
 
 def rangeSearch(root, key1, key2):
     if root.node is None:
